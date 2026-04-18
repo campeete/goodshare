@@ -13,11 +13,13 @@ def create_app():
     from app.routes.goodshare_crisis import crisis_bp
     from app.routes.goodshare_forecast import forecast_bp
     from app.routes.goodshare_gemini import gemini_bp
+    from app.routes.goodshare_global import global_bp
 
     app.register_blueprint(points_bp, url_prefix='/api')
     app.register_blueprint(crisis_bp, url_prefix='/api')
     app.register_blueprint(forecast_bp, url_prefix='/api')
     app.register_blueprint(gemini_bp, url_prefix='/api')
+    app.register_blueprint(global_bp, url_prefix='/api')
 
     @app.route('/')
     def index():

@@ -2,115 +2,262 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GoodShare — Food Crisis Early Warning</title>
+<title>GoodShare — Global Food Crisis Early Warning</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',sans-serif;background:#0d1117;color:#e6edf3}
-header{background:#161b22;padding:16px 24px;border-bottom:1px solid #30363d;display:flex;align-items:center;gap:12px}
-header h1{font-size:1.4rem;font-weight:700;color:#58a6ff}
-.badge{background:#da3633;color:white;padding:4px 10px;border-radius:4px;font-size:0.75rem;font-weight:700}
-.layout{display:grid;grid-template-columns:1fr 380px;height:calc(100vh - 57px)}
+header{background:#161b22;padding:12px 20px;border-bottom:1px solid #30363d;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.header-left{display:flex;align-items:center;gap:10px}
+header h1{font-size:1.2rem;font-weight:700;color:#58a6ff}
+.badge{background:#da3633;color:white;padding:3px 9px;border-radius:4px;font-size:0.7rem;font-weight:700}
+.toggle-bar{display:flex;gap:6px}
+.toggle-btn{padding:5px 14px;border-radius:5px;border:1px solid #30363d;background:#21262d;color:#8b949e;font-size:0.78rem;cursor:pointer;font-weight:600;transition:all .15s}
+.toggle-btn.active{background:#1f3d5c;border-color:#388bfd;color:#58a6ff}
+.layout{display:grid;grid-template-columns:1fr 370px;height:calc(100vh - 53px)}
 #map{width:100%;height:100%}
-.sidebar{background:#161b22;border-left:1px solid #30363d;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
-.card{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:14px}
-.card h3{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:#8b949e;margin-bottom:10px}
-.ward-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #30363d;font-size:0.85rem}
+.sidebar{background:#161b22;border-left:1px solid #30363d;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.card{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:12px}
+.card h3{font-size:0.72rem;text-transform:uppercase;letter-spacing:.08em;color:#8b949e;margin-bottom:8px}
+.country-row{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:5px;cursor:pointer;transition:background .15s;margin-bottom:3px}
+.country-row:hover{background:#30363d}
+.country-row.active{background:#1f3d5c;border:1px solid #388bfd}
+.ward-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #30363d;font-size:0.83rem}
 .risk-high{color:#da3633;font-weight:700}
-.nvi-bar{height:8px;background:#30363d;border-radius:4px;margin:6px 0}
-.nvi-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ffd700,#ff6b35,#da3633)}
-.brief-text{font-size:0.82rem;line-height:1.6;color:#c9d1d9;font-style:italic}
-.btn{background:#238636;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600;width:100%;margin-top:8px}
+.nvi-bar{height:6px;background:#30363d;border-radius:3px;margin:4px 0}
+.nvi-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ffd700,#ff6b35,#da3633)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px}
+.detail-item{background:#161b22;border-radius:4px;padding:5px 8px}
+.detail-val{font-size:0.95rem;font-weight:700;color:#58a6ff}
+.detail-label{font-size:0.63rem;color:#8b949e;margin-top:1px}
+.pending-box{background:#161b22;border:1px solid #30363d;border-radius:5px;padding:8px 10px;font-size:0.75rem;color:#8b949e;margin-top:6px}
+.pending-box b{color:#e3b341}
+.source-note{font-size:0.65rem;color:#8b949e;margin-top:5px;font-style:italic}
+.brief-text{font-size:0.8rem;line-height:1.6;color:#c9d1d9;font-style:italic;min-height:44px}
+.btn{background:#238636;color:white;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:0.77rem;font-weight:600;width:100%;margin-top:6px}
 .btn:hover{background:#2ea043}
 .btn.loading{background:#30363d;cursor:wait}
-canvas{max-height:160px}
 </style>
 </head>
 <body>
 <header>
-  <h1>🌍 GoodShare Early Warning</h1>
-  <span class="badge">⚠ CRISIS ACTIVE — WARD 7 + WARD 8</span>
+  <div class="header-left">
+    <h1>🌍 GoodShare Early Warning</h1>
+    <span class="badge" id="headerBadge">6 COUNTRIES — WHO DATA</span>
+  </div>
+  <div class="toggle-bar">
+    <button class="toggle-btn active" id="btnGlobal" onclick="switchView('global')">🌍 Global View</button>
+    <button class="toggle-btn" id="btnDC" onclick="switchView('dc')">📍 DC Detail</button>
+  </div>
 </header>
+
 <div class="layout">
   <div id="map"></div>
-  <div class="sidebar">
+
+  <!-- GLOBAL SIDEBAR -->
+  <div class="sidebar" id="sidebarGlobal">
     <div class="card">
-      <h3>Crisis Status</h3>
+      <h3>Countries — Real WHO Data</h3>
+      <div id="countryList">Loading...</div>
+    </div>
+
+    <div class="card" id="detailCard" style="display:none">
+      <h3 id="detailTitle">Country Profile</h3>
+      <div class="detail-grid" id="detailGrid"></div>
+      <div class="source-note" id="sourceNote"></div>
+      <div class="pending-box" id="pendingBox"></div>
+    </div>
+
+    <div class="card">
+      <h3>AI Coordinator Brief</h3>
+      <div class="brief-text" id="briefTextGlobal">Select a country to generate a brief.</div>
+      <button class="btn" id="briefBtnGlobal" onclick="loadBriefGlobal()" disabled>Select a Country First</button>
+    </div>
+  </div>
+
+  <!-- DC SIDEBAR -->
+  <div class="sidebar" id="sidebarDC" style="display:none">
+    <div class="card">
+      <h3>Crisis Status — Washington DC</h3>
       <div class="ward-row"><span>Ward 7</span><span class="risk-high">HIGH — NVI 0.81</span></div>
       <div class="ward-row"><span>Ward 8</span><span class="risk-high">HIGH — NVI 0.86</span></div>
-      <div style="font-size:0.75rem;color:#8b949e;margin-top:8px">Trigger: Tropical Storm Warning — NOAA Alert DC Metro</div>
-    </div>
-    <div class="card">
-      <h3>14-Day Demand Forecast — Ward 8</h3>
-      <canvas id="forecastChart"></canvas>
-      <div style="font-size:0.72rem;color:#8b949e;margin-top:6px">Peak risk day 9 · NVI 0.86 · SNAP cycle day 4</div>
+      <div style="font-size:0.72rem;color:#8b949e;margin-top:7px">Trigger: Tropical Storm Warning — NOAA Alert DC Metro</div>
     </div>
     <div class="card">
       <h3>Nutritional Vulnerability Index</h3>
-      <div style="font-size:0.8rem;margin-bottom:4px">Ward 8 — 0.86</div>
+      <div style="font-size:0.8rem;margin-bottom:3px">Ward 8 — 0.86</div>
       <div class="nvi-bar"><div class="nvi-fill" style="width:86%"></div></div>
-      <div style="font-size:0.8rem;margin-top:8px;margin-bottom:4px">Ward 7 — 0.81</div>
+      <div style="font-size:0.8rem;margin-top:7px;margin-bottom:3px">Ward 7 — 0.81</div>
       <div class="nvi-bar"><div class="nvi-fill" style="width:81%"></div></div>
     </div>
     <div class="card">
-      <h3>AI Coordinator Brief</h3>
-      <div class="brief-text" id="briefText">Click below to generate AI brief...</div>
-      <button class="btn" id="briefBtn" onclick="loadBrief()">Generate Ward 8 Brief</button>
+      <h3>AI Coordinator Brief — Ward 8</h3>
+      <div class="brief-text" id="briefTextDC">Click below to generate AI brief...</div>
+      <button class="btn" id="briefBtnDC" onclick="loadBriefDC()">Generate Ward 8 Brief</button>
     </div>
     <div class="card">
       <h3>Active Food Points (Crisis Zone)</h3>
-      <div id="pointsList" style="font-size:0.8rem;color:#8b949e">Loading...</div>
+      <div id="dcPointsList" style="font-size:0.78rem;color:#8b949e">Loading...</div>
     </div>
   </div>
 </div>
+
 <script>
 const API = 'http://127.0.0.1:8080';
-const map = L.map('map').setView([38.88,-76.98],12);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
-const crisisIcon = L.divIcon({className:'',html:'<div style="background:#da3633;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px #da3633"></div>',iconSize:[12,12]});
-const normalIcon = L.divIcon({className:'',html:'<div style="background:#238636;width:10px;height:10px;border-radius:50%;border:2px solid white"></div>',iconSize:[10,10]});
+let selectedCode = null;
+let currentView = 'global';
+let allMarkers = {global: [], dc: []};
 
-fetch(`${API}/api/crisis/points`).then(r=>r.json()).then(data=>{
-  data.active_points.forEach(p=>{
-    L.marker([p.lat,p.lng],{icon:crisisIcon}).addTo(map)
-      .bindPopup(`<b>${p.name}</b><br>${p.type}<br>${p.hours}<br>${p.food_types.join(', ')}`);
-  });
-  document.getElementById('pointsList').innerHTML=data.active_points.map(p=>`<div style="padding:4px 0;border-bottom:1px solid #30363d"><b>${p.name}</b> — ${p.type}<br><span style="color:#8b949e">${p.hours}</span></div>`).join('');
-});
+const map = L.map('map').setView([10, 20], 3);
+const tileGlobal = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO'});
+const tileDC = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'});
+tileGlobal.addTo(map);
 
-fetch(`${API}/api/points`).then(r=>r.json()).then(points=>{
-  points.forEach(p=>{
-    if(!['Ward 7','Ward 8'].includes(p.ward)){
-      L.marker([p.lat,p.lng],{icon:normalIcon}).addTo(map)
-        .bindPopup(`<b>${p.name}</b><br>${p.type}<br>${p.hours}`);
-    }
-  });
-});
-
-fetch(`${API}/api/forecast/ward8`).then(r=>r.json()).then(data=>{
-  new Chart(document.getElementById('forecastChart').getContext('2d'),{
-    type:'line',
-    data:{
-      labels:data.forecast.map(d=>`D${d.day}`),
-      datasets:[{label:'Risk',data:data.forecast.map(d=>d.risk),borderColor:'#da3633',backgroundColor:'rgba(218,54,51,0.15)',fill:true,tension:0.4,pointRadius:2}]
-    },
-    options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:1,ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}},x:{ticks:{color:'#8b949e',font:{size:9}},grid:{color:'#21262d'}}}}
-  });
-});
-
-function loadBrief(){
-  const btn=document.getElementById('briefBtn');
-  const txt=document.getElementById('briefText');
-  btn.textContent='Generating...';btn.classList.add('loading');
-  fetch(`${API}/api/gemini/brief/ward8`).then(r=>r.json()).then(data=>{
-    txt.textContent=data.brief;btn.textContent='Regenerate';btn.classList.remove('loading');
-  }).catch(()=>{
-    txt.textContent="Ward 8 faces critical food insecurity risk peaking day 9. Pre-position supplies at Martha's Table and Congress Heights Mutual Aid within 48 hours. Prioritize households with infants and diabetic residents.";
-    btn.textContent='Retry';btn.classList.remove('loading');
-  });
+function getRiskColor(nvi){
+  if(nvi>=0.55) return '#f85149';
+  if(nvi>=0.45) return '#ff7b72';
+  if(nvi>=0.35) return '#ffa657';
+  return '#e3b341';
 }
+
+function switchView(view){
+  currentView = view;
+  document.getElementById('btnGlobal').classList.toggle('active', view==='global');
+  document.getElementById('btnDC').classList.toggle('active', view==='dc');
+  document.getElementById('sidebarGlobal').style.display = view==='global'?'flex':'none';
+  document.getElementById('sidebarDC').style.display = view==='dc'?'flex':'none';
+  allMarkers.global.forEach(m => view==='global' ? map.addLayer(m) : map.removeLayer(m));
+  allMarkers.dc.forEach(m => view==='dc' ? map.addLayer(m) : map.removeLayer(m));
+  if(view==='global'){
+    tileGlobal.addTo(map); tileDC.remove();
+    map.flyTo([10,20],3,{duration:1});
+    document.getElementById('headerBadge').textContent='6 COUNTRIES — WHO DATA';
+  } else {
+    tileDC.addTo(map); tileGlobal.remove();
+    map.flyTo([38.88,-76.98],12,{duration:1});
+    document.getElementById('headerBadge').textContent='⚠ CRISIS ACTIVE — WARD 7 + WARD 8';
+  }
+}
+
+// ── GLOBAL ─────────────────────────────────────────────────────────────────
+fetch(`${API}/api/global/countries`)
+  .then(r=>r.json())
+  .then(countries=>{
+    document.getElementById('countryList').innerHTML = countries.map(c=>`
+      <div class="country-row" id="row-${c.code}" onclick="selectCountry('${c.code}')">
+        <div>
+          <div style="font-size:0.85rem;font-weight:600">${c.name}</div>
+          <div style="font-size:0.7rem;color:#8b949e">NVI ${c.nvi_score} (WHO calculated)</div>
+        </div>
+        <div style="font-size:0.75rem;font-weight:700;color:${getRiskColor(c.nvi_score)}">${c.nvi_score}</div>
+      </div>
+    `).join('');
+
+    countries.forEach(c=>{
+      const color = getRiskColor(c.nvi_score);
+      const m = L.circleMarker([c.lat,c.lng],{
+        radius: 8+c.nvi_score*20,
+        fillColor:color, color:color, weight:2, opacity:0.9, fillOpacity:0.45
+      });
+      m.bindTooltip(`<b>${c.name}</b><br>NVI: ${c.nvi_score}<br>Wasting: ${c.who_malnutrition.wasting_rate}%<br>Stunting: ${c.who_malnutrition.stunting_rate}%<br>Diabetes: ${c.who_diabetes.prevalence_18plus_crude}%`);
+      m.on('click',()=>selectCountry(c.code));
+      m.addTo(map);
+      allMarkers.global.push(m);
+    });
+  });
+
+function selectCountry(code){
+  selectedCode = code;
+  document.querySelectorAll('.country-row').forEach(r=>r.classList.remove('active'));
+  const row = document.getElementById('row-'+code);
+  if(row) row.classList.add('active');
+
+  fetch(`${API}/api/global/forecast/${code}`)
+    .then(r=>r.json())
+    .then(c=>{
+      map.flyTo([c.lat,c.lng],5,{duration:1.2});
+      document.getElementById('detailCard').style.display='block';
+      document.getElementById('detailTitle').textContent = c.name+' — WHO Profile';
+      document.getElementById('detailGrid').innerHTML = `
+        <div class="detail-item"><div class="detail-val">${c.nvi_score}</div><div class="detail-label">NVI Score (calculated)</div></div>
+        <div class="detail-item"><div class="detail-val">${c.who_malnutrition.wasting_rate}%</div><div class="detail-label">Wasting Rate 0–5 yrs</div></div>
+        <div class="detail-item"><div class="detail-val">${c.who_malnutrition.severe_wasting_rate}%</div><div class="detail-label">Severe Wasting</div></div>
+        <div class="detail-item"><div class="detail-val">${c.who_malnutrition.stunting_rate}%</div><div class="detail-label">Stunting Rate</div></div>
+        <div class="detail-item"><div class="detail-val">${c.who_diabetes.prevalence_18plus_crude}%</div><div class="detail-label">Diabetes 18+ (2022)</div></div>
+        <div class="detail-item"><div class="detail-val">${c.who_malnutrition.survey_year}</div><div class="detail-label">Survey Year</div></div>
+      `;
+      document.getElementById('sourceNote').textContent =
+        'Malnutrition: '+c.who_malnutrition.source+' · Diabetes: '+c.who_diabetes.source;
+      document.getElementById('pendingBox').innerHTML =
+        '<b>⏳ Pending live signals:</b><br>'+c.pending.join(' · ');
+      document.getElementById('briefBtnGlobal').textContent='Generate '+c.name+' Brief';
+      document.getElementById('briefBtnGlobal').disabled=false;
+      document.getElementById('briefTextGlobal').textContent='Click below to generate AI coordinator brief...';
+    });
+}
+
+function loadBriefGlobal(){
+  if(!selectedCode) return;
+  const btn=document.getElementById('briefBtnGlobal');
+  const txt=document.getElementById('briefTextGlobal');
+  btn.textContent='Generating...'; btn.classList.add('loading'); btn.disabled=true;
+  fetch(`${API}/api/gemini/brief/${selectedCode.toLowerCase()}`)
+    .then(r=>r.json())
+    .then(data=>{
+      txt.textContent=data.brief||data.error||'Brief generated.';
+      btn.textContent='Regenerate'; btn.classList.remove('loading'); btn.disabled=false;
+    }).catch(()=>{
+      txt.textContent='Gemini quota unavailable. Brief will load when a fresh API key is active.';
+      btn.textContent='Retry'; btn.classList.remove('loading'); btn.disabled=false;
+    });
+}
+
+// ── DC ──────────────────────────────────────────────────────────────────────
+const crisisIcon=L.divIcon({className:'',html:'<div style="background:#da3633;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px #da3633"></div>',iconSize:[12,12]});
+const normalIcon=L.divIcon({className:'',html:'<div style="background:#238636;width:10px;height:10px;border-radius:50%;border:2px solid white"></div>',iconSize:[10,10]});
+
+fetch(`${API}/api/crisis/points`)
+  .then(r=>r.json())
+  .then(data=>{
+    data.active_points.forEach(p=>{
+      const m=L.marker([p.lat,p.lng],{icon:crisisIcon});
+      m.bindPopup(`<b>${p.name}</b><br>${p.type}<br>${p.hours}`);
+      allMarkers.dc.push(m);
+    });
+    document.getElementById('dcPointsList').innerHTML=data.active_points.map(p=>
+      `<div style="padding:4px 0;border-bottom:1px solid #30363d"><b>${p.name}</b> — ${p.type}<br><span style="color:#8b949e">${p.hours}</span></div>`
+    ).join('');
+  });
+
+fetch(`${API}/api/points`)
+  .then(r=>r.json())
+  .then(points=>{
+    points.forEach(p=>{
+      if(!['Ward 7','Ward 8'].includes(p.ward)){
+        const m=L.marker([p.lat,p.lng],{icon:normalIcon});
+        m.bindPopup(`<b>${p.name}</b><br>${p.type}<br>${p.hours}`);
+        allMarkers.dc.push(m);
+      }
+    });
+  });
+
+function loadBriefDC(){
+  const btn=document.getElementById('briefBtnDC');
+  const txt=document.getElementById('briefTextDC');
+  btn.textContent='Generating...'; btn.classList.add('loading');
+  fetch(`${API}/api/gemini/brief/ward8`)
+    .then(r=>r.json())
+    .then(data=>{
+      txt.textContent=data.brief;
+      btn.textContent='Regenerate'; btn.classList.remove('loading');
+    }).catch(()=>{
+      txt.textContent='Gemini quota unavailable. Brief will load when a fresh API key is active.';
+      btn.textContent='Retry'; btn.classList.remove('loading');
+    });
+}
+
+allMarkers.dc.forEach(m=>map.removeLayer(m));
 </script>
 </body>
 </html>
