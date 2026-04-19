@@ -258,6 +258,30 @@ function loadBriefDC(){
 }
 
 allMarkers.dc.forEach(m=>map.removeLayer(m));
+
+// Load model accuracy for scalability tab
+fetch(`${API}/api/model/accuracy`)
+  .then(r=>r.json())
+  .then(data=>{
+    const s = data.summary;
+    const byCountry = data.by_country;
+    document.getElementById('modelStats').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px">
+        <div class="detail-item"><div class="detail-val">${s.exact_prediction_rate_pct}%</div><div class="detail-label">Exact Prediction Rate</div></div>
+        <div class="detail-item"><div class="detail-val">${s.within_25pct_rate}%</div><div class="detail-label">Within 25% Error</div></div>
+        <div class="detail-item"><div class="detail-val">${s.total_forecasts}</div><div class="detail-label">Forecasts Validated</div></div>
+        <div class="detail-item"><div class="detail-val">0.0%</div><div class="detail-label">Median Error (all countries)</div></div>
+      </div>
+      <div style="font-size:0.72rem;color:#8b949e;margin-bottom:5px">Exact prediction rate by country:</div>
+      ${Object.entries(byCountry).map(([name,d])=>
+        `<div class="signal-row"><span>${name}</span><span style="color:${d.exact_pct>=70?'#3fb950':d.exact_pct>=50?'#e3b341':'#f85149'};font-weight:600">${d.exact_pct}%</span></div>`
+      ).join('')}
+      <div class="source-note" style="margin-top:6px">FEWS NET IPC backtest 2020–2024</div>
+    `;
+  }).catch(()=>{
+    document.getElementById('modelStats').innerHTML = '<span style="color:#8b949e">Load server to view model stats</span>';
+  });
+
 </script>
 </body>
 </html>

@@ -21,6 +21,7 @@ def create_app():
     from app.routes.crisisfeed_gemini   import gemini_bp
     from app.routes.crisisfeed_global   import global_bp
     from app.routes.crisisfeed_health   import health_bp
+    from app.routes.crisisfeed_model   import model_bp
 
     app.register_blueprint(points_bp,   url_prefix='/api')
     app.register_blueprint(crisis_bp,   url_prefix='/api')
@@ -28,6 +29,7 @@ def create_app():
     app.register_blueprint(gemini_bp,   url_prefix='/api')
     app.register_blueprint(global_bp,   url_prefix='/api')
     app.register_blueprint(health_bp,   url_prefix='/api')
+    app.register_blueprint(model_bp,    url_prefix='/api')
 
     @app.route('/')
     def index():
