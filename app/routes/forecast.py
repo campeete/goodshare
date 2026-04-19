@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from xgboost import XGBRegressor
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
 import os
 import subprocess
@@ -24,7 +23,7 @@ def load_data() -> pd.DataFrame:
     return df
 
 
-def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame]:
     df = df.copy()
 
     # Drop rows with missing target
@@ -55,13 +54,62 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     X = df[feature_cols]
     y = df["pct_error"]
 
-    return X, y
+    return X, y, df
 
 
-def train(X: pd.DataFrame, y: pd.Series) -> XGBRegressor:
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+from sklearn.inspection import permutation_importance
+from scipy import stats
+
+
+def calculate_significance(model: XGBRegressor, X_test: pd.DataFrame, y_test: pd.Series) -> pd.DataFrame:
+    """
+    1. Permutation importance — how much does each feature matter?
+    2. Permutation test — is the model's overall performance better than chance?
+    """
+    # --- Feature significance via permutation importance ---
+    perm = permutation_importance(model, X_test, y_test, n_repeats=30, random_state=42, n_jobs=-1)
+
+    importance_df = pd.DataFrame({
+        "feature": X_test.columns,
+        "importance_mean": perm.importances_mean,
+        "importance_std": perm.importances_std,
+        # z-score: how many std deviations above zero is the importance?
+        "z_score": perm.importances_mean / (perm.importances_std + 1e-10),
+        # one-tailed p-value from z-score
+        "p_value": stats.norm.sf(perm.importances_mean / (perm.importances_std + 1e-10)),
+        "significant": perm.importances_mean / (perm.importances_std + 1e-10) > 1.96,  # p < 0.05
+    }).sort_values("importance_mean", ascending=False).round(4)
+
+    print(f"\nPermutation feature importance:\n{importance_df.to_string()}")
+
+    # --- Overall model significance via permutation test ---
+    n_permutations = 1000
+    baseline_mae = mean_absolute_error(y_test, model.predict(X_test))
+    permuted_maes = []
+
+    for _ in range(n_permutations):
+        y_permuted = y_test.sample(frac=1, random_state=None).values
+        permuted_maes.append(mean_absolute_error(y_permuted, model.predict(X_test)))
+
+    permuted_maes = np.array(permuted_maes)
+    # p-value: proportion of permutations where random MAE <= model MAE
+    p_value_overall = (permuted_maes <= baseline_mae).mean()
+
+    print(f"\nOverall model significance:")
+    print(f"  Baseline MAE:      {baseline_mae:.4f}")
+    print(f"  Permuted MAE mean: {permuted_maes.mean():.4f}")
+    print(f"  p-value:           {p_value_overall:.4f}")
+    print(f"  Significant:       {p_value_overall < 0.05}")
+
+    return importance_df
+
+
+def train(X: pd.DataFrame, y: pd.Series, df: pd.DataFrame) -> XGBRegressor:
+    train_mask = df["projection_year"] < 2023
+    X_train, X_test = X[train_mask], X[~train_mask]
+    y_train, y_test = y[train_mask], y[~train_mask]
+
+    print(f"Train: {len(X_train)} rows, Test: {len(X_test)} rows")
 
     model = XGBRegressor(
         n_estimators=200,
@@ -82,11 +130,10 @@ def train(X: pd.DataFrame, y: pd.Series) -> XGBRegressor:
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
     print(f"\nTest MAE:  {mae:.2f}")
-    print(f"Test R²:   {r2:.4f}")
+    print(f"Test R^2:   {r2:.4f}")
 
-    # Feature importance
-    importance = pd.Series(model.feature_importances_, index=X.columns)
-    print(f"\nFeature importances:\n{importance.sort_values(ascending=False).round(4)}")
+    importance_df = calculate_significance(model, X_test, y_test)
+    importance_df.to_csv(os.path.join(DATA_DIR, "xgb_feature_significance.csv"), index=False)
 
     return model
 
@@ -95,8 +142,8 @@ if __name__ == "__main__":
     df = load_data()
     print(f"Loaded {len(df)} rows")
 
-    X, y = prepare_features(df)
+    X, y, df = prepare_features(df)
     print(f"Features: {X.columns.tolist()}")
-    print(f"Target: pct_error — mean={y.mean():.2f}, std={y.std():.2f}")
+    print(f"Target: pct_error - mean={y.mean():.2f}, std={y.std():.2f}")
 
-    model = train(X, y)
+    model = train(X, y, df)
