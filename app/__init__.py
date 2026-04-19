@@ -24,6 +24,6 @@ def create_app():
     @app.route('/')
     def index():
         static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../static'))
-        return send_from_directory(static_dir, 'goodshare_dashboard.html')
+        return send_from_directory(static_dir, 'crisisfeed_dashboard.html')
 
     return app
