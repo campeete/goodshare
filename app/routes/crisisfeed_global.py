@@ -4,7 +4,7 @@ import json, os
 global_bp = Blueprint('global', __name__)
 
 def load_global():
-    path = os.path.join(os.path.dirname(__file__), '../../data/seed/goodshare_global_data.json')
+    path = os.path.join(os.path.dirname(__file__), '../../data/seed/crisisfeed_global_data.json')
     with open(path) as f:
         return json.load(f)
 

@@ -1,4 +1,4 @@
-# GoodShare — Developer Log
+# CrisisFeed — Developer Log
 ## GWU Hackathon 2026 | Cameron P. | Backend Lead | April 18, 2026
 
 ---
@@ -6,7 +6,7 @@
 ## ~14:00 ET — Project Conception
 
 Team aligned on Track 2, Problem Statement 3.
-Project name went: NutriTrack → GoodShare → AidNet → GoodShare.
+Project name went: NutriTrack → CrisisFeed → AidNet → CrisisFeed.
 Ash proposed the Sudan 45-day-warning framing.
 
 LESSON: Settle on a name before touching the filesystem. Renaming folders mid-build caused ~45 minutes of debugging.
@@ -90,7 +90,7 @@ LESSON: When you get 429 with limit: 0, don't debug the code — get a new key f
 
 ## ~18:00 ET — Frontend Dashboard Built
 
-goodshare_dashboard.html: Leaflet map, Chart.js risk curve, NVI bars, Gemini brief button.
+crisisfeed_dashboard.html: Leaflet map, Chart.js risk curve, NVI bars, Gemini brief button.
 Used const API = 'http://127.0.0.1:8080' as base URL constant — port changes are one edit.
 Added catch() fallback for when Gemini quota is exhausted — shows hardcoded brief instead of crashing.
 
@@ -98,9 +98,9 @@ Added catch() fallback for when Gemini quota is exhausted — shows hardcoded br
 
 ## ~18:15 ET — Folder Rename Chaos
 
-WHAT HAPPENED: mv ~/Documents/aidnet ~/Documents/goodshare
-EXPECTED: aidnet renamed to goodshare
-ACTUAL: aidnet folder moved INSIDE goodshare (goodshare/aidnet/)
+WHAT HAPPENED: mv ~/Documents/aidnet ~/Documents/crisisfeed
+EXPECTED: aidnet renamed to crisisfeed
+ACTUAL: aidnet folder moved INSIDE crisisfeed (crisisfeed/aidnet/)
 
 ROOT CAUSE: On macOS, mv source dest when dest already exists MOVES source INTO dest, not over it. For a rename to work, the destination must not exist.
 
@@ -110,7 +110,7 @@ CASCADING EFFECTS:
 - Had to rebuild venv from scratch
 - Had to manually re-create all route files
 
-FIX: mv ~/Documents/goodshare/aidnet/* ~/Documents/goodshare/ to move files up one level.
+FIX: mv ~/Documents/crisisfeed/aidnet/* ~/Documents/crisisfeed/ to move files up one level.
 
 LESSON: Check whether destination directory exists before mv. Use: mv source dest only when dest does not exist.
 
@@ -134,7 +134,7 @@ LESSON: .gitignore BEFORE the first git add. Always. The three things that alway
 
 ## ~18:45 ET — Dashboard Live
 
-http://127.0.0.1:8080 loads full GoodShare dashboard.
+http://127.0.0.1:8080 loads full CrisisFeed dashboard.
 Map loads with 15 pins (7 red crisis, 8 green normal).
 14-day risk curve renders.
 NVI bars display.
@@ -149,7 +149,7 @@ All 5 API endpoints confirmed.
 | google-genai over google-generativeai | Old package deprecated, uses gRPC; new uses REST |
 | Port 8080 over 5000 | macOS AirPlay uses 5000 by default |
 | Single HTML file frontend | No build step, no node_modules, opens in browser immediately |
-| goodshare_ prefix on all route files | Prevents naming conflicts with other projects |
+| crisisfeed_ prefix on all route files | Prevents naming conflicts with other projects |
 | Hardcoded forecast data | Acceptable for hackathon; real integration uses FEWS NET API |
 | Flask factory pattern (create_app) | Standard Flask production pattern, avoids circular imports |
 
@@ -177,14 +177,14 @@ All 5 API endpoints confirmed.
 All files in a project should be prefixed with the project name to avoid
 conflicts when multiple projects are open at once:
 
-goodshare_README.md
-goodshare_DEVLOG.md
-goodshare_dashboard.html
-goodshare_points.py
-goodshare_crisis.py
-goodshare_forecast.py
-goodshare_gemini.py
-goodshare_gemini_service.py
+crisisfeed_README.md
+crisisfeed_DEVLOG.md
+crisisfeed_dashboard.html
+crisisfeed_points.py
+crisisfeed_crisis.py
+crisisfeed_forecast.py
+crisisfeed_gemini.py
+crisisfeed_gemini_service.py
 
 This prevents confusion in editors, terminals, and git diffs when working
 on multiple projects simultaneously.

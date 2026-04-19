@@ -6,7 +6,7 @@ points_bp = Blueprint('points', __name__)
 @points_bp.route('/')
 def index():
     static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../static'))
-    return send_from_directory(static_dir, 'goodshare_dashboard.html')
+    return send_from_directory(static_dir, 'crisisfeed_dashboard.html')
 
 @points_bp.route('/points', methods=['GET'])
 def get_points():

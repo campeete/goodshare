@@ -2,7 +2,7 @@
   "_data_sources": {
     "malnutrition": "WHO Global Database on Child Growth and Malnutrition — JME Selected surveys, BTSX age 0-4.99, 2023",
     "diabetes": "WHO Global Diabetes Database 2022, Both Sexes, 18+, Crude Prevalence",
-    "nvi": "Calculated from WHO data — see goodshare_global.py calculate_nvi()",
+    "nvi": "Calculated from WHO data — see crisisfeed_global.py calculate_nvi()",
     "forecast": "NOT YET WIRED — requires FEWS NET IPC + ACLED + CHIRPS signals",
     "ipc_phase": "NOT YET WIRED — placeholder only, source: FEWS NET fdw.fews.net/api/ipcphase/",
     "population_at_risk": "NOT YET WIRED — requires FEWS NET population data"

@@ -1,5 +1,5 @@
 """
-goodshare_gemini_service.py
+crisisfeed_gemini_service.py
 ---------------------------
 Gemini AI service layer for CrisisFeed.
 All prompts, all AI calls, all parsing logic in one place.
@@ -10,7 +10,7 @@ import json
 from google import genai
 from google.genai import errors as genai_errors
 from dotenv import load_dotenv
-from app.goodshare_logger import get_logger, log_external_api
+from app.crisisfeed_logger import get_logger, log_external_api
 
 load_dotenv()
 logger = get_logger(__name__)

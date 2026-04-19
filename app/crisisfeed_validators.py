@@ -1,5 +1,5 @@
 import re
-from app.goodshare_logger import get_logger
+from app.crisisfeed_logger import get_logger
 
 logger = get_logger(__name__)
 
