@@ -47,12 +47,11 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.Data
         "forecast_year",
         "forecast_month",
         "predicted_mid",
-        "actual_mid",
-    ]
+        ]
     feature_cols = [c for c in feature_cols if c in df.columns]
 
     X = df[feature_cols]
-    y = df["pct_error"]
+    y = df["actual_mid"]
 
     return X, y, df
 
@@ -104,6 +103,10 @@ def calculate_significance(model: XGBRegressor, X_test: pd.DataFrame, y_test: pd
     return importance_df
 
 
+from sklearn.model_selection import GridSearchCV, PredefinedSplit
+import numpy as np
+
+
 def train(X: pd.DataFrame, y: pd.Series, df: pd.DataFrame) -> XGBRegressor:
     train_mask = df["projection_year"] < 2023
     X_train, X_test = X[train_mask], X[~train_mask]
@@ -111,31 +114,56 @@ def train(X: pd.DataFrame, y: pd.Series, df: pd.DataFrame) -> XGBRegressor:
 
     print(f"Train: {len(X_train)} rows, Test: {len(X_test)} rows")
 
-    model = XGBRegressor(
-        n_estimators=200,
-        max_depth=4,
-        learning_rate=0.05,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        random_state=42,
+    # Use a PredefinedSplit so grid search respects the temporal split
+    # -1 = training fold, 0 = validation fold
+    # Use the last 20% of training data as the validation fold
+    n_val = int(len(X_train) * 0.2)
+    split_index = [-1] * (len(X_train) - n_val) + [0] * n_val
+    ps = PredefinedSplit(test_fold=split_index)
+
+    param_grid = {
+        "n_estimators": [100, 200, 300],
+        "max_depth": [3, 4, 6],
+        "learning_rate": [0.01, 0.05, 0.1],
+        "subsample": [0.7, 0.8, 1.0],
+        "colsample_bytree": [0.7, 0.8, 1.0],
+    }
+
+    model = XGBRegressor(random_state=42, n_jobs=-1)
+
+    grid_search = GridSearchCV(
+        estimator=model,
+        param_grid=param_grid,
+        scoring="neg_mean_absolute_error",
+        cv=ps,
+        verbose=2,
         n_jobs=-1,
     )
-    model.fit(
-        X_train, y_train,
-        eval_set=[(X_test, y_test)],
-        verbose=25,
-    )
 
-    y_pred = model.predict(X_test)
+    print("\nRunning grid search...")
+    grid_search.fit(X_train, y_train)
+
+    print(f"\nBest parameters: {grid_search.best_params_}")
+    print(f"Best CV MAE: {-grid_search.best_score_:.4f}")
+
+    best_model = grid_search.best_estimator_
+
+    # Evaluate on held-out test set
+    y_pred = best_model.predict(X_test)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
     print(f"\nTest MAE:  {mae:.2f}")
-    print(f"Test R^2:   {r2:.4f}")
+    print(f"Test R2:   {r2:.4f}")
 
-    importance_df = calculate_significance(model, X_test, y_test)
+    # Save grid search results
+    results_df = pd.DataFrame(grid_search.cv_results_)
+    results_df.to_csv(os.path.join(DATA_DIR, "xgb_grid_search_results.csv"), index=False)
+    print(f"\nGrid search results saved to {DATA_DIR}")
+
+    importance_df = calculate_significance(best_model, X_test, y_test)
     importance_df.to_csv(os.path.join(DATA_DIR, "xgb_feature_significance.csv"), index=False)
 
-    return model
+    return best_model
 
 
 if __name__ == "__main__":
