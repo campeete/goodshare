@@ -45,18 +45,30 @@ def get_paginated(endpoint: str, params: dict) -> list:
 def get_ipc_population_size(scenario: str, start_date: str, end_date: str) -> pd.DataFrame:
     all_results = []
     for country_code in COUNTRIES:
-        params = {
-            "country_code": country_code,
-            "format": "json",
-            "fields": "simple",
-            "scenario": scenario,
-            "start_date": start_date,
-            "end_date": end_date,
-        }
-        rows = get_paginated("ipcpopulationsize", params)
-        print(f"  [{scenario}] {country_code}: {len(rows)} records")
-        all_results.extend(rows)
-    return pd.DataFrame(all_results)
+        for unit_type in [None, "admin1"]:
+            params = {
+                "country_code": country_code,
+                "format": "json",
+                "fields": "simple",
+                "scenario": scenario,
+                "start_date": start_date,
+                "end_date": end_date,
+            }
+            if unit_type:
+                params["unit_type"] = unit_type
+
+            rows = get_paginated("ipcpopulationsize", params)
+            label = unit_type or "country"
+            print(f"  [{scenario}] {country_code} ({label}): {len(rows)} records")
+            all_results.extend(rows)
+
+    df = pd.DataFrame(all_results)
+
+    # Drop duplicates in case country-level and admin1 pulls overlap
+    if not df.empty:
+        df = df.drop_duplicates(subset=["id"])
+
+    return df
 
 def build_comparison(start_date: str, end_date: str) -> pd.DataFrame:
     print("Fetching actual (CS)...")
@@ -194,3 +206,5 @@ if __name__ == "__main__":
     df_overall.to_csv(os.path.join(DATA_DIR, "ipc_accuracy_overall.csv"), index=False)
     print("\nSaved: ipc_predicted_vs_actual.csv, ipc_accuracy_by_country_and_year.csv, ipc_accuracy_overall.csv")
     print(f"\nSaved files to:{DATA_DIR}")
+    
+    
