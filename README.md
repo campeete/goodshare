@@ -105,9 +105,9 @@ MIT
 ## Data Sources
 - [FEWS NET](https://fdw.fews.net/api/ipcphase/?format=json) — IPC food security phase classifications
 - [ACLED](https://acleddata.com) — Armed conflict event data
-- [WHO Global Diabetes Database](https://www.who.int/data/gho/data/themes/topics/topic-details/GHO/body-mass-index) — Diabetes prevalence 18+
-- [WHO Child Growth & Malnutrition](https://www.who.int/nutgrowthdb) — Wasting, stunting, severe wasting rates
-- [NOAA](https://www.weather.gov) — Weather alert data
+- [WHO Malnutrition Database](https://www.who.int/nutgrowthdb) — Wasting, stunting, severe wasting
+- [WHO Diabetes Database](https://www.who.int/data/gho) — Diabetes prevalence 18+
+- [NOAA](https://www.weather.gov) — Weather alerts
 
 ## License
-MIT License — see [LICENSE](LICENSE) for details.
+[MIT](LICENSE.md)
