@@ -1,0 +1,8 @@
+feature,importance_mean,importance_std,z_score,p_value,significant
+predicted_mid,0.0017,0.0008,2.0383,0.0208,True
+country_code_enc,0.0008,0.0004,2.0541,0.02,True
+projection_month,0.0003,0.0004,0.7017,0.2414,False
+forecast_month,0.0001,0.0,2.4152,0.0079,True
+admin_1_enc,0.0,0.0,0.0,0.5,False
+projection_year,0.0,0.0,0.0,0.5,False
+forecast_year,0.0,0.0,0.0,0.5,False
