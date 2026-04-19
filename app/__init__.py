@@ -9,18 +9,18 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
 
-    from app.goodshare_config import get_config
+    from app.crisisfeed_config import get_config
     app.config.from_object(get_config())
 
-    from app.goodshare_errors import register_error_handlers
+    from app.crisisfeed_errors import register_error_handlers
     register_error_handlers(app)
 
-    from app.routes.goodshare_points   import points_bp
-    from app.routes.goodshare_crisis   import crisis_bp
-    from app.routes.goodshare_forecast import forecast_bp
-    from app.routes.goodshare_gemini   import gemini_bp
-    from app.routes.goodshare_global   import global_bp
-    from app.routes.goodshare_health   import health_bp
+    from app.routes.crisisfeed_points   import points_bp
+    from app.routes.crisisfeed_crisis   import crisis_bp
+    from app.routes.crisisfeed_forecast import forecast_bp
+    from app.routes.crisisfeed_gemini   import gemini_bp
+    from app.routes.crisisfeed_global   import global_bp
+    from app.routes.crisisfeed_health   import health_bp
 
     app.register_blueprint(points_bp,   url_prefix='/api')
     app.register_blueprint(crisis_bp,   url_prefix='/api')

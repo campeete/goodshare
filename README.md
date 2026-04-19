@@ -1,11 +1,11 @@
-# GoodShare — Food Crisis Early Warning System
+# CrisisFeed — Food Crisis Early Warning System
 
 > GWU Hackathon 2026 · Track 2: GW Global Food Institute
 > Problem Statement 3: "Feeding Communities When It Matters Most"
 
 ## The Problem
 
-When conflict broke out in Sudan in 2023, the WFP took 3 weeks to establish food aid access. FEWS NET data showed deteriorating food security around Khartoum 45 days before the conflict began. The signals existed. The translation layer did not. GoodShare is that translation layer.
+When conflict broke out in Sudan in 2023, the WFP took 3 weeks to establish food aid access. FEWS NET data showed deteriorating food security around Khartoum 45 days before the conflict began. The signals existed. The translation layer did not. CrisisFeed is that translation layer.
 
 ## What It Does
 
@@ -16,8 +16,8 @@ When conflict broke out in Sudan in 2023, the WFP took 3 weeks to establish food
 
 ## Quick Start
 
-git clone https://github.com/campeete/goodshare.git
-cd goodshare
+git clone https://github.com/campeete/crisisfeed.git
+cd crisisfeed
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -44,22 +44,22 @@ Env:      python-dotenv
 
 ## Project Structure
 
-goodshare/
+crisisfeed/
 ├── app/
 │   ├── __init__.py
 │   ├── routes/
-│   │   ├── goodshare_points.py
-│   │   ├── goodshare_crisis.py
-│   │   ├── goodshare_forecast.py
-│   │   └── goodshare_gemini.py
+│   │   ├── crisisfeed_points.py
+│   │   ├── crisisfeed_crisis.py
+│   │   ├── crisisfeed_forecast.py
+│   │   └── crisisfeed_gemini.py
 │   └── services/
-│       └── goodshare_gemini_service.py
+│       └── crisisfeed_gemini_service.py
 ├── data/seed/food_points.json
-├── static/goodshare_dashboard.html
+├── static/crisisfeed_dashboard.html
 ├── run.py
 ├── requirements.txt
-├── goodshare_README.md
-└── goodshare_DEVLOG.md
+├── crisisfeed_README.md
+└── crisisfeed_DEVLOG.md
 
 ## NVI Formula
 
@@ -94,7 +94,7 @@ Census API:       Real NVI demographic data per ward
 
 ## File Naming Convention
 
-All files in this project are prefixed with goodshare_ to prevent
+All files in this project are prefixed with crisisfeed_ to prevent
 conflicts when multiple projects are open at once. Apply this pattern
 to every new project going forward.
 

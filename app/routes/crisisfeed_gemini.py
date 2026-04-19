@@ -1,5 +1,5 @@
 """
-goodshare_gemini.py
+crisisfeed_gemini.py
 -------------------
 All Gemini AI endpoints for CrisisFeed.
 7 distinct AI capabilities serving humanitarian coordinators.
@@ -10,16 +10,16 @@ import os
 import datetime
 from flask import Blueprint, request
 
-from app.goodshare_errors import (
+from app.crisisfeed_errors import (
     success_response, not_found, bad_request,
     validation_error, service_unavailable, internal_error
 )
-from app.goodshare_validators import (
+from app.crisisfeed_validators import (
     validate_country_code, validate_ward,
     validate_gemini_input, validate_json_body,
     VALID_COUNTRY_CODES
 )
-from app.goodshare_logger import get_logger
+from app.crisisfeed_logger import get_logger
 
 logger = get_logger(__name__)
 gemini_bp = Blueprint('gemini', __name__)
@@ -38,7 +38,7 @@ WARD_DATA = {
 }
 
 _GLOBAL_DATA_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '../../data/seed/goodshare_global_data.json')
+    os.path.join(os.path.dirname(__file__), '../../data/seed/crisisfeed_global_data.json')
 )
 
 
@@ -70,10 +70,10 @@ def coordinator_brief(identifier: str):
         country = _load_country(identifier_upper)
         if not country:
             return not_found(f"Country data for '{identifier_upper}'")
-        from app.routes.goodshare_global import calculate_nvi
+        from app.routes.crisisfeed_global import calculate_nvi
         nvi = calculate_nvi(country)
         try:
-            from app.services.goodshare_gemini_service import generate_country_brief
+            from app.services.crisisfeed_gemini_service import generate_country_brief
             brief = generate_country_brief({**country, 'nvi_score': nvi})
             return success_response({"identifier": identifier_upper, "country": country['name'],
                                      "brief": brief, "brief_type": "country", "nvi_score": nvi})
@@ -87,7 +87,7 @@ def coordinator_brief(identifier: str):
 
     data = WARD_DATA[identifier_lower]
     try:
-        from app.services.goodshare_gemini_service import generate_coordinator_brief
+        from app.services.crisisfeed_gemini_service import generate_coordinator_brief
         brief = generate_coordinator_brief(identifier_upper, data, data['nvi_score'])
         return success_response({"identifier": identifier_lower, "ward": identifier_upper,
                                  "brief": brief, "brief_type": "ward",
@@ -112,7 +112,7 @@ def parse_point():
     if not is_valid:
         return validation_error('text', error_msg)
     try:
-        from app.services.goodshare_gemini_service import parse_food_point_description
+        from app.services.crisisfeed_gemini_service import parse_food_point_description
         result = parse_food_point_description(body['text'])
         return success_response(result)
     except PermissionError as e:
@@ -142,13 +142,13 @@ def ingest_country():
     if not is_valid:
         return validation_error('text', error_msg)
     try:
-        from app.services.goodshare_gemini_service import ingest_country_data
+        from app.services.crisisfeed_gemini_service import ingest_country_data
         extracted = ingest_country_data(body['text'])
         logger.info(f"Country ingested: {extracted.get('name', 'unknown')}")
         return success_response({
             "extracted":    extracted,
             "ready_to_add": extracted.get('name') is not None,
-            "message":      "Data extracted. Add to goodshare_global_data.json to make live.",
+            "message":      "Data extracted. Add to crisisfeed_global_data.json to make live.",
             "next_step":    "Add extracted object to the countries array in seed data"
         })
     except PermissionError as e:
@@ -174,10 +174,10 @@ def crisis_alert(country_code: str):
     country_data = _load_country(country_code.upper())
     if not country_data:
         return not_found(f"Country data for '{country_code.upper()}'")
-    from app.routes.goodshare_global import calculate_nvi
+    from app.routes.crisisfeed_global import calculate_nvi
     nvi = calculate_nvi(country_data)
     try:
-        from app.services.goodshare_gemini_service import generate_crisis_alert
+        from app.services.crisisfeed_gemini_service import generate_crisis_alert
         alert = generate_crisis_alert(
             {**country_data, 'nvi_score': nvi},
             {"ipc_phase": country_data.get('ipc_phase_placeholder')}
@@ -215,10 +215,10 @@ def compare_countries_route():
         return not_found(f"Country '{code_a}'")
     if not data_b:
         return not_found(f"Country '{code_b}'")
-    from app.routes.goodshare_global import calculate_nvi
+    from app.routes.crisisfeed_global import calculate_nvi
     nvi_a, nvi_b = calculate_nvi(data_a), calculate_nvi(data_b)
     try:
-        from app.services.goodshare_gemini_service import compare_countries
+        from app.services.crisisfeed_gemini_service import compare_countries
         analysis = compare_countries(
             {**data_a, 'nvi_score': nvi_a},
             {**data_b, 'nvi_score': nvi_b}
@@ -254,10 +254,10 @@ def supply_recommendation(country_code: str):
         'general food rations', 'oral rehydration salts (ORS)',
         'infant formula', 'diabetic-friendly rations'
     ])
-    from app.routes.goodshare_global import calculate_nvi
+    from app.routes.crisisfeed_global import calculate_nvi
     nvi = calculate_nvi(country_data)
     try:
-        from app.services.goodshare_gemini_service import generate_supply_recommendation
+        from app.services.crisisfeed_gemini_service import generate_supply_recommendation
         recommendation = generate_supply_recommendation(
             {**country_data, 'nvi_score': nvi}, available_stock
         )
@@ -287,10 +287,10 @@ def situation_report(country_code: str):
     country_data = _load_country(country_code.upper())
     if not country_data:
         return not_found(f"Country data for '{country_code.upper()}'")
-    from app.routes.goodshare_global import calculate_nvi
+    from app.routes.crisisfeed_global import calculate_nvi
     nvi = calculate_nvi(country_data)
     try:
-        from app.services.goodshare_gemini_service import generate_situation_report
+        from app.services.crisisfeed_gemini_service import generate_situation_report
         report = generate_situation_report({**country_data, 'nvi_score': nvi})
         logger.info(f"Report: {country_code.upper()}")
         return success_response({
