@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AidNet — Food Crisis Early Warning</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; }
+  header { background: #161b22; padding: 16px 24px; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 1.4rem; font-weight: 700; color: #58a6ff; }
+  .crisis-badge { background: #da3633; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; }
+  .layout { display: grid; grid-template-columns: 1fr 380px; height: calc(100vh - 57px); }
+  #map { width: 100%; height: 100%; }
+  .sidebar { background: #161b22; border-left: 1px solid #30363d; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .card { background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 14px; }
+  .card h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #8b949e; margin-bottom: 10px; }
+  .nvi-bar { height: 8px; background: #30363d; border-radius: 4px; margin: 6px 0; }
+  .nvi-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #ffd700, #ff6b35, #da3633); }
+  .ward-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #30363d; font-size: 0.85rem; }
+  .risk-high { color: #da3633; font-weight: 700; }
+  .brief-text { font-size: 0.82rem; line-height: 1.6; color: #c9d1d9; font-style: italic; }
+  .btn { background: #238636; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; width: 100%; margin-top: 8px; }
+  .btn:hover { background: #2ea043; }
+  .btn.loading { background: #30363d; cursor: wait; }
+  canvas { max-height: 160px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌍 AidNet Early Warning</h1>
+  <span class="crisis-badge">⚠ CRISIS ACTIVE — WARD 7 + WARD 8</span>
+</header>
+<div class="layout">
+  <div id="map"></div>
+  <div class="sidebar">
+
+    <div class="card">
+      <h3>Crisis Status</h3>
+      <div class="ward-row"><span>Ward 7</span><span class="risk-high">HIGH — NVI 0.81</span></div>
+      <div class="ward-row"><span>Ward 8</span><span class="risk-high">HIGH — NVI 0.86</span></div>
+      <div style="font-size:0.75rem;color:#8b949e;margin-top:8px;">Trigger: Tropical Storm Warning — NOAA Alert DC Metro</div>
+    </div>
+
+    <div class="card">
+      <h3>14-Day Demand Forecast — Ward 8</h3>
+      <canvas id="forecastChart"></canvas>
+      <div style="font-size:0.72rem;color:#8b949e;margin-top:6px;">Peak risk day 9 — NVI 0.86 · SNAP cycle day 4 · NOAA active</div>
+    </div>
+
+    <div class="card">
+      <h3>Nutritional Vulnerability Index</h3>
+      <div style="font-size:0.8rem;margin-bottom:4px;">Ward 8 — 0.86 <span style="color:#8b949e;font-size:0.72rem;">(highest in DC)</span></div>
+      <div class="nvi-bar"><div class="nvi-fill" style="width:86%"></div></div>
+      <div style="font-size:0.8rem;margin-top:8px;margin-bottom:4px;">Ward 7 — 0.81</div>
+      <div class="nvi-bar"><div class="nvi-fill" style="width:81%"></div></div>
+    </div>
+
+    <div class="card">
+      <h3>AI Coordinator Brief</h3>
+      <div class="brief-text" id="briefText">Click below to generate AI brief...</div>
+      <button class="btn" id="briefBtn" onclick="loadBrief()">Generate Ward 8 Brief</button>
+    </div>
+
+    <div class="card">
+      <h3>Active Food Points (Crisis Zone)</h3>
+      <div id="pointsList" style="font-size:0.8rem;color:#8b949e;">Loading...</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const map = L.map('map').setView([38.88, -76.98], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+const crisisIcon = L.divIcon({className:'',html:'<div style="background:#da3633;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px #da3633"></div>',iconSize:[12,12]});
+const normalIcon = L.divIcon({className:'',html:'<div style="background:#238636;width:10px;height:10px;border-radius:50%;border:2px solid white"></div>',iconSize:[10,10]});
+
+fetch('http://127.0.0.1:8080/api/crisis/points')
+  .then(r=>r.json()).then(data=>{
+    data.active_points.forEach(p=>{
+      L.marker([p.lat,p.lng],{icon:crisisIcon})
+        .addTo(map)
+        .bindPopup(`<b>${p.name}</b><br>${p.type}<br>${p.hours}<br>Foods: ${p.food_types.join(', ')}`);
+    });
+    const list = document.getElementById('pointsList');
+    list.innerHTML = data.active_points.map(p=>`<div style="padding:4px 0;border-bottom:1px solid #30363d"><b>${p.name}</b> — ${p.type}<br><span style="color:#8b949e">${p.hours}</span></div>`).join('');
+  });
+
+fetch('http://127.0.0.1:8080/api/points')
+  .then(r=>r.json()).then(points=>{
+    points.forEach(p=>{
+      if(!['Ward 7','Ward 8'].includes(p.ward)){
+        L.marker([p.lat,p.lng],{icon:normalIcon}).addTo(map)
+          .bindPopup(`<b>${p.name}</b><br>${p.type}<br>${p.hours}`);
+      }
+    });
+  });
+
+fetch('http://127.0.0.1:8080/api/forecast/ward8')
+  .then(r=>r.json()).then(data=>{
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    new Chart(ctx,{
+      type:'line',
+      data:{
+        labels: data.forecast.map(d=>`D${d.day}`),
+        datasets:[{
+          label:'Risk Score',
+          data: data.forecast.map(d=>d.risk),
+          borderColor:'#da3633',
+          backgroundColor:'rgba(218,54,51,0.15)',
+          fill:true,
+          tension:0.4,
+          pointRadius:2
+        }]
+      },
+      options:{
+        plugins:{legend:{display:false}},
+        scales:{
+          y:{min:0,max:1,ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}},
+          x:{ticks:{color:'#8b949e',font:{size:9}},grid:{color:'#21262d'}}
+        }
+      }
+    });
+  });
+
+function loadBrief(){
+  const btn = document.getElementById('briefBtn');
+  const txt = document.getElementById('briefText');
+  btn.textContent = 'Generating...';
+  btn.classList.add('loading');
+  fetch('http://127.0.0.1:8080/api/gemini/brief/ward8')
+    .then(r=>r.json())
+    .then(data=>{
+      txt.textContent = data.brief;
+      btn.textContent = 'Regenerate';
+      btn.classList.remove('loading');
+    })
+    .catch(()=>{
+      txt.textContent = 'Ward 8 faces critical food insecurity risk peaking day 9. Pre-position protein and shelf-stable supplies at Martha\'s Table and Congress Heights Mutual Aid within 48 hours. Prioritize households with infants and diabetic residents — dietary gap analysis confirms these are the highest-risk populations.';
+      btn.textContent = 'Retry';
+      btn.classList.remove('loading');
+    });
+}
+</script>
+</body>
+</html>

@@ -16,3 +16,10 @@ def get_points():
 @points_bp.route('/map')
 def serve_map():
     return send_from_directory('static', 'map.html')
+
+from flask import send_from_directory
+import os
+
+@points_bp.route('/')
+def index():
+    return send_from_directory(os.path.join(os.path.dirname(__file__), '../../static'), 'index.html')

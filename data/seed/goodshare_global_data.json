@@ -1,0 +1,132 @@
+{
+  "_data_sources": {
+    "malnutrition": "WHO Global Database on Child Growth and Malnutrition — JME Selected surveys, BTSX age 0-4.99, 2023",
+    "diabetes": "WHO Global Diabetes Database 2022, Both Sexes, 18+, Crude Prevalence",
+    "nvi": "Calculated from WHO data — see goodshare_global.py calculate_nvi()",
+    "forecast": "NOT YET WIRED — requires FEWS NET IPC + ACLED + CHIRPS signals",
+    "ipc_phase": "NOT YET WIRED — placeholder only, source: FEWS NET fdw.fews.net/api/ipcphase/",
+    "population_at_risk": "NOT YET WIRED — requires FEWS NET population data"
+  },
+  "countries": [
+    {
+      "name": "Haiti",
+      "code": "HTI",
+      "lat": 18.9712,
+      "lng": -72.2852,
+      "who_malnutrition": {
+        "wasting_rate": 4.98,
+        "severe_wasting_rate": 0.91,
+        "stunting_rate": 21.98,
+        "survey_year": 2023,
+        "source": "Haiti 2023 SMART Survey — UNICEF/GoH"
+      },
+      "who_diabetes": {
+        "prevalence_18plus_crude": 23.7,
+        "year": 2022,
+        "source": "WHO Global Diabetes Database"
+      },
+      "ipc_phase_placeholder": 4,
+      "ipc_phase_source": "PENDING — wire from fdw.fews.net/api/ipcphase/?country_code=HTI"
+    },
+    {
+      "name": "Sudan",
+      "code": "SDN",
+      "lat": 15.5007,
+      "lng": 32.5599,
+      "who_malnutrition": {
+        "wasting_rate": 15.38,
+        "severe_wasting_rate": 4.08,
+        "stunting_rate": 34.10,
+        "survey_year": 2023,
+        "source": "WHO MGRS JME Selected"
+      },
+      "who_diabetes": {
+        "prevalence_18plus_crude": 10.7,
+        "year": 2022,
+        "source": "WHO Global Diabetes Database"
+      },
+      "ipc_phase_placeholder": 5,
+      "ipc_phase_source": "PENDING — wire from fdw.fews.net/api/ipcphase/?country_code=SDN"
+    },
+    {
+      "name": "Ethiopia",
+      "code": "ETH",
+      "lat": 9.1450,
+      "lng": 40.4897,
+      "who_malnutrition": {
+        "wasting_rate": 6.80,
+        "severe_wasting_rate": 1.11,
+        "stunting_rate": 36.78,
+        "survey_year": 2023,
+        "source": "WHO MGRS JME Selected"
+      },
+      "who_diabetes": {
+        "prevalence_18plus_crude": 6.8,
+        "year": 2022,
+        "source": "WHO Global Diabetes Database"
+      },
+      "ipc_phase_placeholder": 4,
+      "ipc_phase_source": "PENDING — wire from fdw.fews.net/api/ipcphase/?country_code=ETH"
+    },
+    {
+      "name": "Mali",
+      "code": "MLI",
+      "lat": 17.5707,
+      "lng": -3.9962,
+      "who_malnutrition": {
+        "wasting_rate": 10.62,
+        "severe_wasting_rate": 2.20,
+        "stunting_rate": 21.79,
+        "survey_year": 2023,
+        "source": "WHO MGRS JME Selected"
+      },
+      "who_diabetes": {
+        "prevalence_18plus_crude": 8.4,
+        "year": 2022,
+        "source": "WHO Global Diabetes Database"
+      },
+      "ipc_phase_placeholder": 4,
+      "ipc_phase_source": "PENDING — wire from fdw.fews.net/api/ipcphase/?country_code=MLI"
+    },
+    {
+      "name": "Niger",
+      "code": "NER",
+      "lat": 17.6078,
+      "lng": 8.0817,
+      "who_malnutrition": {
+        "wasting_rate": 10.87,
+        "severe_wasting_rate": 2.13,
+        "stunting_rate": 47.70,
+        "survey_year": 2023,
+        "source": "WHO MGRS JME Selected"
+      },
+      "who_diabetes": {
+        "prevalence_18plus_crude": 6.2,
+        "year": 2022,
+        "source": "WHO Global Diabetes Database"
+      },
+      "ipc_phase_placeholder": 4,
+      "ipc_phase_source": "PENDING — wire from fdw.fews.net/api/ipcphase/?country_code=NER"
+    },
+    {
+      "name": "Somalia",
+      "code": "SOM",
+      "lat": 5.1521,
+      "lng": 46.1996,
+      "who_malnutrition": {
+        "wasting_rate": 14.32,
+        "severe_wasting_rate": 4.33,
+        "stunting_rate": 25.30,
+        "survey_year": 2023,
+        "source": "WHO MGRS JME Selected"
+      },
+      "who_diabetes": {
+        "prevalence_18plus_crude": 10.0,
+        "year": 2022,
+        "source": "WHO Global Diabetes Database"
+      },
+      "ipc_phase_placeholder": 5,
+      "ipc_phase_source": "PENDING — wire from fdw.fews.net/api/ipcphase/?country_code=SOM"
+    }
+  ]
+}
